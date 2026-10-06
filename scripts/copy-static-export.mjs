@@ -1,4 +1,4 @@
-import { access, cp, mkdir, rm } from "node:fs/promises";
+import { access, cp, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,4 +16,15 @@ await rm(pagesDirectory, { recursive: true, force: true });
 await mkdir(pagesDirectory, { recursive: true });
 await cp(exportDirectory, pagesDirectory, { recursive: true });
 
-console.log("Static GitHub Pages site copied to docs/.");
+const exportEntries = await readdir(exportDirectory);
+await Promise.all(
+  exportEntries.map((entry) =>
+    cp(
+      path.join(exportDirectory, entry),
+      path.join(projectRoot, entry),
+      { recursive: true },
+    ),
+  ),
+);
+
+console.log("Static GitHub Pages site copied to docs/ and the repository root.");
