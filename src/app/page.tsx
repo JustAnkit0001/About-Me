@@ -172,7 +172,7 @@ export default function Home() {
           <div className="hero-copy">
             <p className="eyebrow">
               <span className="eyebrow-mark" />
-              COMPUTER ENGINEERING <span className="eyebrow-divider">/</span> NEPAL
+              ENGINEERING <span className="eyebrow-divider">/</span> NEPAL
             </p>
             <h1 id="hero-title">
               Building at the
@@ -182,8 +182,9 @@ export default function Home() {
               <span>systems &amp; play.</span>
             </h1>
             <p className="hero-description">
-              I&apos;m Ankit — a computer engineering student and developer
-              exploring software, game development, and interactive technology.
+              I&apos;m Ankit — an Electronics, Communication and Information
+              Engineering student and developer exploring software, game
+              development, and interactive technology.
             </p>
             <div className="hero-actions">
               <a
@@ -267,10 +268,11 @@ export default function Home() {
                 <span>engineering meets imagination.</span>
               </h2>
               <p>
-                I&apos;m studying computer engineering in Nepal and building a
-                foundation across programming, systems, and creative tools.
-                Lately, I&apos;m especially drawn to the overlap between C/C++,
-                Python, web development, and Unreal Engine.
+                I&apos;m studying Electronics, Communication and Information
+                Engineering in Nepal and building a foundation across
+                programming, systems, and creative tools. Lately, I&apos;m
+                especially drawn to the overlap between C/C++, Python, web
+                development, and Unreal Engine.
               </p>
               <div className="toolkit" aria-label="Areas of interest">
                 <span className="mono">IN THE MIX</span>

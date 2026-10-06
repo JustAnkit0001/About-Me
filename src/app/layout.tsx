@@ -15,14 +15,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ankitbelbase.com.np"),
-  title: "Ankit Belbase — Computer Engineering & Software",
+  title: "Ankit Belbase — Electronics, Communication & Information Engineering",
   description:
-    "Ankit Belbase is a computer engineering student and developer in Nepal, exploring software, game development, and interactive technology.",
+    "Ankit Belbase is an Electronics, Communication and Information Engineering student and developer in Nepal, exploring software, game development, and interactive technology.",
   icons: {
     icon: "/icon.svg",
   },
   openGraph: {
-    title: "Ankit Belbase — Computer Engineering & Software",
+    title: "Ankit Belbase — Electronics, Communication & Information Engineering",
     description:
       "Exploring software, game development, and interactive technology from Nepal.",
     url: "https://ankitbelbase.com.np",
