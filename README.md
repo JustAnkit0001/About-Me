@@ -3,26 +3,4 @@
 A dark-first, responsive personal portfolio built with Next.js, TypeScript,
 Tailwind CSS, shadcn/ui, Framer Motion, and Lucide.
 
-## Getting started
 
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the site.
-
-## Scripts
-
-- `npm run dev` — start the development server
-- `npm run build` — create a production build
-- `npm run start` — serve the production build
-- `npm run lint` — run ESLint
-
-## Content
-
-The homepage is in `src/app/page.tsx`, with the visual system in
-`src/app/globals.css`. The focus cards intentionally describe areas of interest
-rather than claiming specific projects or results. Update them as project
-details become available. The public contact email and site domain are used in
-the homepage and metadata.
