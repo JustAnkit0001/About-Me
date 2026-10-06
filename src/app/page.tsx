@@ -5,6 +5,7 @@ import {
   Gamepad2,
   Globe2,
   MapPin,
+  MessageCircle,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,50 @@ const focusAreas = [
       "Making clear, responsive interfaces for ideas that deserve a place on the web.",
   },
 ];
+
+const socialLinks = [
+  {
+    name: "Facebook",
+    detail: "Connect",
+    href: "https://www.facebook.com/ankit.belbase.58",
+    icon: FacebookMark,
+  },
+  {
+    name: "Instagram",
+    detail: "Follow along",
+    href: "https://www.instagram.com/justankit01/",
+    icon: InstagramMark,
+  },
+  {
+    name: "WhatsApp",
+    detail: "+977 9749849770",
+    href: "https://wa.me/9779749849770",
+    icon: MessageCircle,
+  },
+];
+
+function FacebookMark() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.5 1.6-1.5h1.7V3.1c-.3 0-1.4-.1-2.7-.1-2.7 0-4.5 1.6-4.5 4.6v2H6.7v3.2h2.9V21h3.9Z" />
+    </svg>
+  );
+}
+
+function InstagramMark() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    >
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.6" cy="6.7" r="0.8" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 function EngineeringGraphic() {
   return (
@@ -267,6 +312,32 @@ export default function Home() {
                 ankitbelbase.06@gmail.com
                 <ArrowUpRight aria-hidden="true" />
               </a>
+              <div className="social-contact">
+                <p className="social-heading mono">FIND ME ELSEWHERE</p>
+                <ul className="social-links" aria-label="Social contacts">
+                  {socialLinks.map(({ name, detail, href, icon: Icon }) => (
+                    <li key={name}>
+                      <a
+                        className="social-link"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${name}: ${detail} (opens in a new tab)`}
+                      >
+                        <Icon aria-hidden="true" />
+                        <span className="social-link-copy">
+                          <span className="social-name">{name}</span>
+                          <span className="social-detail">{detail}</span>
+                        </span>
+                        <ArrowUpRight
+                          className="social-arrow"
+                          aria-hidden="true"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </Reveal>
             <div className="contact-mark" aria-hidden="true">
               A<span>/</span>B
