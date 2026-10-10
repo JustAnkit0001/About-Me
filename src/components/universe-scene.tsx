@@ -341,20 +341,28 @@ export function UniverseScene() {
   );
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("nova-portfolio-data");
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved) as PortfolioData;
+    const applySavedPortfolio = (saved: string | null) => {
+      if (!saved) return;
+      try {
+        const parsed = JSON.parse(saved) as PortfolioData;
       const contactDetails = portfolio.planets.find((planet) => planet.id === "contact")?.details ?? [];
       const planets = parsed.planets.map((planet) =>
         planet.id === "contact" ? { ...planet, details: contactDetails } : planet,
       );
       const migrated = { ...parsed, siteName: portfolio.siteName, planets, socialLinks: portfolio.socialLinks };
       window.localStorage.setItem("nova-portfolio-data", JSON.stringify(migrated));
-      window.setTimeout(() => setPortfolioData(migrated), 0);
-    } catch {
-      window.localStorage.removeItem("nova-portfolio-data");
-    }
+        setPortfolioData(migrated);
+      } catch {
+        window.localStorage.removeItem("nova-portfolio-data");
+      }
+    };
+
+    applySavedPortfolio(window.localStorage.getItem("nova-portfolio-data"));
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "nova-portfolio-data") applySavedPortfolio(event.newValue);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const selectPlanet = (planetId: PlanetId) => {
