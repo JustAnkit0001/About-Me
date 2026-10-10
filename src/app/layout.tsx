@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
-import "./globals.css";
+import "./project-nova.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,18 +15,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ankitbelbase.com.np"),
-  title: "Ankit Belbase — Electronics, Communication & Information Engineering",
+  title: "ANKIT BELBASE PORTFOLIO | Personal Universe",
   description:
-    "Ankit Belbase is an Electronics, Communication and Information Engineering student and developer in Nepal, exploring software, game development, and interactive technology.",
+    "A cinematic personal portfolio with a navigable universe, selected work, and accessible content for every visitor.",
   icons: {
     icon: "/icon.svg",
   },
   openGraph: {
-    title: "Ankit Belbase — Electronics, Communication & Information Engineering",
+    title: "ANKIT BELBASE PORTFOLIO | Personal Universe",
     description:
-      "Exploring software, game development, and interactive technology from Nepal.",
+      "A cinematic personal portfolio built around a digital universe and a clear, accessible information architecture.",
     url: "https://ankitbelbase.com.np",
-    siteName: "Ankit Belbase",
+    siteName: "ANKIT BELBASE PORTFOLIO",
     type: "website",
   },
 };
