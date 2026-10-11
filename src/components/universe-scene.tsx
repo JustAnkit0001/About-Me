@@ -59,6 +59,25 @@ function createStars(count: number, spread: number, size: number, opacity: numbe
   return new THREE.Points(geometry, material);
 }
 
+function createConstellationRoute(target: THREE.Vector3, color: string) {
+  const midpoint = target.clone().multiplyScalar(0.52);
+  midpoint.z += target.x > 0 ? 0.7 : -0.7;
+  midpoint.y += target.y > 0 ? -0.35 : 0.35;
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    midpoint,
+    target,
+  ]);
+  const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
+  const material = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+  });
+  return new THREE.Line(geometry, material);
+}
+
 function createPlanet(id: PlanetId, radius: number) {
   const [light, dark] = planetColors[id];
   const planetType = id === "origin" ? 0 : id === "genesis" ? 1 : id === "technology" ? 2 : id === "project-galaxy" ? 3 : 4;
@@ -213,12 +232,21 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
     scene.fog = new THREE.FogExp2(0x02050b, 0.012);
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
     camera.position.set(0, 0.2, 12);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    } catch (error) {
+      console.error("Unable to initialize the portfolio universe renderer.", error);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
     renderer.setClearColor(0x02050b, 1);
     mount.appendChild(renderer.domElement);
 
+    const isNarrowScene = mount.clientWidth < 700;
+    const sceneDistance = isNarrowScene ? 22.5 : 12;
     const world = new THREE.Group();
+    if (isNarrowScene) world.scale.setScalar(0.78);
     scene.add(world);
     world.add(createStars(900, 42, 0.045, 0.72));
     world.add(createStars(380, 28, 0.075, 0.45));
@@ -231,12 +259,17 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
         transparent: true,
         uniforms: { uTime: { value: 0 } },
         vertexShader: `varying vec3 vPos; void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-        fragmentShader: `uniform float uTime; varying vec3 vPos; void main(){float n=sin(vPos.x*.18+uTime*.02)*sin(vPos.y*.24)+sin(vPos.z*.13); vec3 c=mix(vec3(.03,.04,.12),vec3(.12,.04,.18),smoothstep(-.7,.8,n)); gl_FragColor=vec4(c,.16);}`,
+        fragmentShader: `uniform float uTime; varying vec3 vPos; void main(){float n=sin(vPos.x*.18+uTime*.02)*sin(vPos.y*.24)+sin(vPos.z*.13); vec3 c=mix(vec3(.025,.045,.11),vec3(.14,.045,.19),smoothstep(-.7,.8,n)); gl_FragColor=vec4(c,.2);}`,
       }),
     );
     world.add(nebula);
 
     const objects = new Map<PlanetId, THREE.Object3D>();
+    (Object.keys(planetPositions) as PlanetId[])
+      .filter((id) => id !== "origin")
+      .forEach((id) => {
+        world.add(createConstellationRoute(planetPositions[id], planetColors[id][0]));
+      });
     portfolioData.planets.forEach((planet, index) => {
       const radius = planetRadii[planet.id];
       const mesh = createPlanet(planet.id, radius);
@@ -270,9 +303,11 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
     scene.add(key);
 
     const startTime = performance.now();
-    const currentCamera = new THREE.Vector3(0, 0.2, 12);
+    const currentCamera = new THREE.Vector3(0, 0.2, sceneDistance);
     const lookAt = new THREE.Vector3();
     let frame = 0;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let isDocumentVisible = !document.hidden;
     const resize = () => {
       const width = mount.clientWidth;
       const height = mount.clientHeight;
@@ -283,11 +318,10 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(mount);
-    const animate = () => {
+    const renderFrame = () => {
       const elapsed = (performance.now() - startTime) / 1000;
-      frame = requestAnimationFrame(animate);
       objects.forEach((object, id) => {
-        object.rotation.y += id === "origin" ? 0.0009 : 0.0018;
+        if (!reducedMotion) object.rotation.y += id === "origin" ? 0.0009 : 0.0018;
         const material = (object as THREE.Mesh).material as THREE.ShaderMaterial;
         if (material.uniforms) material.uniforms.uTime.value = elapsed;
         if (id === "origin") {
@@ -295,25 +329,47 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
           if (cloudLayer instanceof THREE.Mesh) {
             const cloudMaterial = cloudLayer.material as THREE.ShaderMaterial;
             if (cloudMaterial.uniforms) cloudMaterial.uniforms.uTime.value = elapsed;
-            cloudLayer.rotation.y += 0.0012;
+            if (!reducedMotion) cloudLayer.rotation.y += 0.0012;
           }
         }
       });
       const activePlanet = selectedRef.current;
       const selectedPosition = planetPositions[activePlanet];
+      const sceneTarget = isNarrowScene
+        ? selectedPosition.clone().multiplyScalar(0.78)
+        : selectedPosition;
       const desired = activePlanet === "origin"
-        ? new THREE.Vector3(0, 0.2, 12)
-        : new THREE.Vector3(selectedPosition.x * 0.25, selectedPosition.y * 0.25, 9.4);
+        ? new THREE.Vector3(0, 0.2, sceneDistance)
+        : new THREE.Vector3(
+            sceneTarget.x * (isNarrowScene ? 0.18 : 0.25),
+            sceneTarget.y * (isNarrowScene ? 0.18 : 0.25),
+            isNarrowScene ? 20.5 : 9.4,
+          );
       currentCamera.lerp(desired, 0.035);
       camera.position.copy(currentCamera);
-      lookAt.lerp(selectedPosition, 0.035);
+      lookAt.lerp(sceneTarget, 0.035);
       camera.lookAt(lookAt);
       (nebula.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed;
       renderer.render(scene, camera);
     };
-    animate();
+    const animate = () => {
+      if (!isDocumentVisible || reducedMotion) return;
+      renderFrame();
+      frame = requestAnimationFrame(animate);
+    };
+    const handleVisibilityChange = () => {
+      isDocumentVisible = !document.hidden;
+      if (isDocumentVisible && !reducedMotion) {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    renderFrame();
+    if (!reducedMotion) frame = requestAnimationFrame(animate);
     return () => {
       cancelAnimationFrame(frame);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       observer.disconnect();
       renderer.dispose();
       mount.removeChild(renderer.domElement);
@@ -329,6 +385,105 @@ function ThreeUniverse({ selectedPlanet, portfolioData }: ThreeUniverseProps) {
   }, [portfolioData]);
 
   return <div ref={mountRef} className="three-universe" aria-hidden="true" />;
+}
+
+function PortfolioContent({ portfolioData }: { portfolioData: PortfolioData }) {
+  return (
+    <div className="portfolio-content page-width">
+      <section className="semantic-intro" aria-labelledby="portfolio-intro-heading">
+        <p className="eyebrow">PERSONAL UNIVERSE // ORIGIN</p>
+        <h1 id="portfolio-intro-heading">{portfolioData.name}</h1>
+        <p className="semantic-lede">{portfolioData.intro}</p>
+        <div className="intro-actions">
+          <a className="primary-button" href="#project-galaxy">Explore my work <ArrowRight aria-hidden="true" size={16} /></a>
+          <a className="secondary-button" href="#genesis">Discover my journey</a>
+        </div>
+      </section>
+
+      <div className="content-sections">
+        <section id="genesis" className="content-section" aria-labelledby="genesis-heading">
+          <div className="content-header">
+            <p className="eyebrow">GENESIS // JOURNEY</p>
+            <h2 id="genesis-heading">{portfolioData.planets.find((planet) => planet.id === "genesis")?.summary}</h2>
+          </div>
+          <div className="detail-grid">
+            {portfolioData.focusAreas.map((area) => (
+              <article className="story-card" key={area.title}>
+                <h3>{area.title}</h3>
+                <p>{area.summary}</p>
+              </article>
+            ))}
+            <article className="story-card">
+              <h3>Learning path</h3>
+              <ul className="plain-list">
+                {portfolioData.education.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="technology" className="content-section" aria-labelledby="technology-heading">
+          <div className="content-header">
+            <p className="eyebrow">TECH // TOOLKIT</p>
+            <h2 id="technology-heading">Tools I use to turn careful ideas into working experiences.</h2>
+          </div>
+          <div className="detail-grid">
+            {portfolioData.skills.map((group) => (
+              <article className="story-card skill-group" key={group.title}>
+                <h3>{group.title}</h3>
+                <div className="chip-row" aria-label={`${group.title} technologies`}>
+                  {group.items.map((item) => <span className="chip" key={item}>{item}</span>)}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="project-galaxy" className="content-section" aria-labelledby="work-heading">
+          <div className="content-header">
+            <p className="eyebrow">WORK GALAXY // SELECTED WORK</p>
+            <h2 id="work-heading">A small, honest selection of builds and experiments.</h2>
+          </div>
+          <div className="project-list">
+            {portfolioData.projects.map((project) => (
+              <article className="project-item" key={project.title}>
+                <div className="project-header">
+                  <div>
+                    <p className="card-tag">{project.featured ? "Featured project" : "Experiment"}</p>
+                    <h3>{project.title}</h3>
+                  </div>
+                  <a href={project.repo} target="_blank" rel="noreferrer" aria-label={`Open ${project.title} source repository`}>
+                    <ExternalLink aria-hidden="true" size={15} />
+                  </a>
+                </div>
+                <p>{project.summary}</p>
+                <p className="project-context"><strong>Role:</strong> {project.role} <span aria-hidden="true">·</span> <strong>Outcome:</strong> {project.outcome}</p>
+                <div className="chip-row" aria-label={`${project.title} technology stack`}>
+                  {project.stack.map((item) => <span className="chip" key={item}>{item}</span>)}
+                </div>
+                <a className="project-link" href={project.demo} target="_blank" rel="noreferrer">View project <ArrowRight aria-hidden="true" size={15} /></a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="contact" className="content-section contact-section" aria-labelledby="contact-heading">
+          <div className="content-header">
+            <p className="eyebrow">CONTACT PORTAL // CONNECT</p>
+            <h2 id="contact-heading">Have a thoughtful project in mind? Let&apos;s start a conversation.</h2>
+          </div>
+          <div className="contact-list" aria-label="Contact links">
+            {portfolioData.socialLinks.map((link) => (
+              <a key={link.title} className="contact-link" href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined}>
+                <span>{link.title}</span>
+                <ExternalLink aria-hidden="true" size={14} />
+              </a>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 export function UniverseScene() {
@@ -352,7 +507,8 @@ export function UniverseScene() {
       const migrated = { ...parsed, siteName: portfolio.siteName, planets, socialLinks: portfolio.socialLinks };
       window.localStorage.setItem("nova-portfolio-data", JSON.stringify(migrated));
         setPortfolioData(migrated);
-      } catch {
+      } catch (error) {
+        console.warn("Saved portfolio data was invalid and has been cleared.", error);
         window.localStorage.removeItem("nova-portfolio-data");
       }
     };
@@ -371,7 +527,7 @@ export function UniverseScene() {
   };
 
   return (
-    <section className={isPortfolioLayerVisible ? "nova-shell has-portfolio-layer" : "nova-shell is-universe-only"} aria-label="Personal portfolio universe">
+    <section className={isPortfolioLayerVisible ? "nova-shell has-portfolio-layer" : "nova-shell is-universe-only"} aria-labelledby="portfolio-intro-heading">
       {isPortfolioLayerVisible ? (
       <header className="nova-header page-width">
         <div className="brand-lockup" aria-label="Personal portfolio brand">
@@ -380,7 +536,7 @@ export function UniverseScene() {
         </div>
         <nav className="planet-nav" aria-label="Planet destinations">
           {portfolioData.planets.map((planet) => (
-            <button key={planet.id} type="button" className={selectedPlanet === planet.id ? "nav-pill is-active" : "nav-pill"} aria-pressed={selectedPlanet === planet.id} onClick={() => selectPlanet(planet.id)}>
+            <button key={planet.id} type="button" className={selectedPlanet === planet.id ? "nav-pill is-active" : "nav-pill"} aria-current={selectedPlanet === planet.id ? "page" : undefined} onClick={() => selectPlanet(planet.id)}>
               {planet.shortName}
             </button>
           ))}
@@ -390,7 +546,7 @@ export function UniverseScene() {
       ) : null}
 
       <div className={isPortfolioLayerVisible ? "page-width nova-experience" : "nova-experience"}>
-        <div className="universe-stage" aria-live="polite">
+        <div className="universe-stage">
           <ThreeUniverse selectedPlanet={selectedPlanet} portfolioData={portfolioData} />
           <div className="scene-vignette" aria-hidden="true" />
           {portfolioData.planets.map((planet) => {
@@ -415,17 +571,19 @@ export function UniverseScene() {
             <nav className="scene-index" aria-label="Portfolio destinations">
               <span className="scene-index-title">Portfolio index</span>
               {portfolioData.planets.map((planet) => (
-                <div
+                <button
                   key={planet.id}
+                  type="button"
                   className="scene-index-item"
+                  onClick={() => selectPlanet(planet.id)}
                 >
                   <span className={`scene-index-planet scene-index-planet-${planet.id}`} aria-hidden="true" />
-                  {planet.shortName}
-                </div>
+                  <span className="scene-index-label">{planet.shortName}</span>
+                </button>
               ))}
             </nav>
           ) : null}
-          {isPortfolioLayerVisible ? <div className="scene-guide" aria-label="Scene controls guide"><Compass aria-hidden="true" /><span>Navigate by destination · cinematic focus</span></div> : null}
+          {isPortfolioLayerVisible ? <div className="scene-guide" role="note"><Compass aria-hidden="true" /><span>Navigate by destination · cinematic focus</span></div> : null}
         </div>
 
         {isPortfolioLayerVisible ? <aside className="planet-panel" aria-live="polite">
@@ -449,6 +607,7 @@ export function UniverseScene() {
           ) : null}
         </aside> : null}
       </div>
+      <PortfolioContent portfolioData={portfolioData} />
     </section>
   );
 }

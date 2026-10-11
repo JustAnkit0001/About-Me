@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.svg",
   },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "ANKIT BELBASE PORTFOLIO | Personal Universe",
     description:

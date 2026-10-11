@@ -14,6 +14,8 @@ A cinematic personal portfolio presented as a dark, navigable universe. The site
 - Optional intro overlay with skip flow and reduced-motion support
 - Centralized portfolio data file for easy editing
 - Accessible project, skills, and contact content outside the visual scene
+- Semantic Origin, Genesis, Tech, Work, and Contact sections for search engines and assistive technology
+- Static `robots.txt` and `sitemap.xml` routes for the canonical domain
 - Responsive layout for desktop, tablet, and mobile
 - Static deployment-friendly setup for Cloudflare Pages
 
@@ -46,8 +48,8 @@ npm run build
 ## Cloudflare Pages deployment
 
 1. Connect the repository to Cloudflare Pages.
-2. Use the framework preset for Next.js or a static export workflow if needed.
-3. Set the output directory to `.next` or follow the deployment instructions for the build system in use.
+2. Use the static export workflow already configured in `next.config.ts`.
+3. Set the output directory to `docs` when deploying the generated GitHub Pages-compatible output, or use the repository root export if your provider requires it.
 4. Ensure environment variables are set only if you add external services later.
 
 ## Content updates
