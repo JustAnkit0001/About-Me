@@ -47,8 +47,8 @@ export type PortfolioData = {
 
 export const portfolio: PortfolioData = {
   siteName: "ANKIT BELBASE PORTFOLIO",
-  name: "Independent Creative Technologist",
-  role: "Creative Technologist & Software Engineer",
+  name: "Ankit Belbase",
+  role: "Electronics ,Communication and Information Engineer",
   intro:
     "I design durable digital experiences that balance engineering precision with human-centered design.",
   summary:
@@ -166,13 +166,13 @@ export const portfolio: PortfolioData = {
   ],
   skills: [
     { title: "Languages", items: ["TypeScript", "JavaScript", "Python", "C++"] },
-    { title: "Frameworks", items: ["React", "Next.js", "Node.js", "Tailwind CSS"] },
+    { title: "Frameworks", items: ["React", "Next.js", "Node.js", "Tailwind CSS", "Django"] },
     { title: "Tools", items: ["Git", "Figma", "Vercel", "VS Code"] },
     { title: "Learning", items: ["Three.js", "WebGL", "Systems design", "Game dev"] },
   ] satisfies SkillGroup[],
   projects: [
     {
-      title: "Project Placeholder One",
+      title: "Project  Portfolio",
       summary: "A polished product or prototype concept with a clear user problem and a thoughtful interface.",
       problem: "Placeholder: This project addresses a real product challenge, user workflow, or design opportunity.",
       stack: ["TypeScript", "React", "Tailwind CSS"],
